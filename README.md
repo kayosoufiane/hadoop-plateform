@@ -7,8 +7,11 @@ Now we run it :
 docker-compose up -d
 
 We can test it with :
+
 make mapreduce
+
 make spark-submit-cluster
+
 make spark-submit-client
 
 
