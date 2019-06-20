@@ -1,0 +1,4 @@
+com/mapreduce/examples/DateErrorWritable.class
+com/mapreduce/examples/LogCounts.class
+com/mapreduce/examples/LogCounts$LogReduce.class
+com/mapreduce/examples/LogCounts$LogMap.class

@@ -1,0 +1,135 @@
+version: "3"
+
+services:
+  namenode:
+    image: salimelakoui/hadoop-namenode:latest-salim
+    container_name: namenode
+    ports:
+      - 9870:9870
+    volumes:
+      - hadoop_namenode:/hadoop/dfs/name
+    environment:
+      - CLUSTER_NAME=test
+    env_file:
+      - ./hadoop.env
+
+  datanode:
+    image: salimelakoui/hadoop-datanode:latest-salim
+    ports:
+      - 9864:9864
+    volumes:
+      - hadoop_datanode:/hadoop/dfs/data
+    environment:
+      SERVICE_PRECONDITION: "namenode:9870"
+    env_file:
+      - ./hadoop.env
+
+  datanode-2:
+    image: salimelakoui/hadoop-datanode:latest-salim
+    ports:
+      - 9865:9864
+    volumes:
+      - hadoop_datanode-2:/hadoop/dfs/data
+    environment:
+      SERVICE_PRECONDITION: "namenode:9870"
+    env_file:
+      - ./hadoop.env
+
+  datanode-3:
+    image: salimelakoui/hadoop-datanode:latest-salim
+    ports:
+      - 9866:9864
+    volumes:
+      - hadoop_datanode-3:/hadoop/dfs/data
+    environment:
+      SERVICE_PRECONDITION: "namenode:9870"
+    env_file:
+      - ./hadoop.env
+  
+  resourcemanager:
+    image: salimelakoui/hadoop-resourcemanager:latest-salim
+    container_name: resourcemanager
+    ports:
+      - 8088:8088
+    environment:
+      SERVICE_PRECONDITION: "namenode:9870 datanode:9864"
+    env_file:
+      - ./hadoop.env
+
+  nodemanager-1:
+    image: salimelakoui/hadoop-nodemanager:latest-salim
+    ports:
+      - 8042:8042
+    environment:
+      SERVICE_PRECONDITION: "namenode:9870 datanode:9864 resourcemanager:8088"
+    env_file:
+      - ./hadoop.env
+
+  nodemanager-2:
+    image: salimelakoui/hadoop-nodemanager:latest-salim
+    ports:
+      - 8043:8042
+    environment:
+      SERVICE_PRECONDITION: "namenode:9870 datanode:9864 resourcemanager:8088"
+    env_file:
+      - ./hadoop.env
+
+  spark-master:
+    image: salimelakoui/spark-master:latest-salim
+    ports:
+      - "8080:8080"
+      - "7077:7077"
+    environment:
+      - INIT_DAEMON_STEP=setup_spark
+    env_file:
+      - ./hadoop.env
+
+  spark-worker-1:
+    image: salimelakoui/spark-worker:latest-salim
+    depends_on:
+      - spark-master
+    ports:
+      - "8082:8081"
+    environment:
+      - "SPARK_MASTER=spark://spark-master:7077"
+    env_file:
+      - ./hadoop.env
+
+  spark-worker-1:
+    image: salimelakoui/spark-worker:latest-salim
+    depends_on:
+      - spark-master
+    ports:
+      - "8083:8081"
+    environment:
+      - "SPARK_MASTER=spark://spark-master:7077"
+  
+  historyserver:
+    image: salimelakoui/hadoop-historyserver:latest-salim
+    container_name: historyserver
+    ports:
+      - 8188:8188
+    environment:
+      SERVICE_PRECONDITION: "namenode:9870 datanode:9864 resourcemanager:8088"
+    volumes:
+      - hadoop_historyserver:/hadoop/yarn/timeline
+    env_file:
+      - ./hadoop.env
+  
+  zeppelin:
+    image: salimelakoui/zeppelin:latest-salim
+    ports:
+      - 8000:8080
+    environment:
+      CORE_CONF_fs_defaultFS: "hdfs://namenode:8020"
+      SPARK_MASTER: "spark://spark-master:7077"
+      MASTER: "spark://spark-master:7077"
+    env_file:
+      - ./hadoop.env
+
+volumes:
+  hadoop_namenode:
+  hadoop_datanode:
+  hadoop_datanode-2:
+  hadoop_datanode-3:
+  hadoop_historyserver:
